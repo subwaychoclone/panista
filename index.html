@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>리듬 게임</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+      background: #f4f4f4;
+    }
+    canvas {
+      display: block;
+      margin: auto;
+      background: #222;
+    }
+    .score {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: white;
+      font-size: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div class="score">Score: <span id="score">0</span></div>
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const KEYS = ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'];
+    const keyPositions = KEYS.map((_, index) => 100 + index * 70);
+    const notes = [];
+    const noteSpeed = 5;
+    const scoreDisplay = document.getElementById("score");
+    let score = 0;
+
+    // 노트 클래스
+    class Note {
+      constructor(keyIndex) {
+        this.keyIndex = keyIndex;
+        this.x = keyPositions[keyIndex];
+        this.y = 0;
+        this.hit = false;
+      }
+
+      move() {
+        this.y += noteSpeed;
+      }
+
+      draw() {
+        if (!this.hit) {
+          ctx.fillStyle = "red";
+          ctx.fillRect(this.x, this.y, 50, 20);
+        }
+      }
+    }
+
+    // 게임 키 입력 이벤트
+    document.addEventListener("keydown", (event) => {
+      const keyIndex = KEYS.indexOf(event.key);
+      if (keyIndex !== -1) {
+        const note = notes.find(
+          (note) => note.keyIndex === keyIndex && note.y > 500 && note.y < 550
+        );
+        if (note) {
+          note.hit = true;
+          score += 10;
+          scoreDisplay.textContent = score;
+        }
+      }
+    });
+
+    // 노트 생성
+    function spawnNote() {
+      const keyIndex = Math.floor(Math.random() * KEYS.length);
+      notes.push(new Note(keyIndex));
+    }
+
+    // 게임 루프
+    function gameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 노트 이동 및 삭제
+      notes.forEach((note, index) => {
+        note.move();
+        note.draw();
+        if (note.y > canvas.height || note.hit) {
+          notes.splice(index, 1);
+        }
+      });
+
+      // 키 영역 그리기
+      keyPositions.forEach((x) => {
+        ctx.strokeStyle = "white";
+        ctx.strokeRect(x, 550, 50, 20);
+      });
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    // 1초마다 노트 생성
+    setInterval(spawnNote, 1000);
+
+    // 게임 시작
+    gameLoop();
+  </script>
+</body>
+</html>
